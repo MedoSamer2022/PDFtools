@@ -1,4 +1,4 @@
-/* style.css (update viewer class alignment for better zoom behavior) */
+/* style.css */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -128,4 +128,85 @@ body {
 .file-label {
     display: inline-block;
     width: 100%;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+#signature-pad {
+    border: 2px dashed #bdc3c7;
+    border-radius: 5px;
+    margin: 15px 0;
+    cursor: crosshair;
+    background-color: #f9f9f9;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.modal-actions .btn {
+    flex: 1;
+}
+
+/* Text Formatting Toolbar */
+.text-toolbar {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-20%);
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+    align-items: center;
+}
+
+.text-toolbar select, .text-toolbar input, .text-toolbar button {
+    padding: 8px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+}
+
+.text-toolbar button {
+    cursor: pointer;
+    background: #ecf0f1;
+    color: #2c3e50;
+    min-width: 40px;
+    transition: 0.2s;
+}
+
+.text-toolbar button:hover {
+    background: #bdc3c7;
+}
+
+.text-toolbar input[type="color"] {
+    padding: 2px;
+    width: 40px;
+    cursor: pointer;
 }
