@@ -1,4 +1,5 @@
-import { state, elements } from './state.js';
+// exporter.js
+import { state } from './state.js';
 import { saveCurrentPageState } from './pdfViewer.js';
 
 export async function exportPdf() {
@@ -16,13 +17,15 @@ export async function exportPdf() {
             const tempCanvas = document.createElement('canvas');
             const tempFabric = new fabric.StaticCanvas(tempCanvas);
             tempFabric.setWidth(width * 2); tempFabric.setHeight(height * 2);
-            await new Promise(r => tempFabric.loadFromJSON(state.fabricPages[i + 1], r));
+            await new Promise(r => tempFabric.loadFromJSON(state.fabricPages[i+1], r));
             const img = await pdfDoc.embedPng(tempFabric.toDataURL({ format: 'png', multiplier: 2 }));
             page.drawImage(img, { x: 0, y: 0, width, height });
         }
     }
     state.deletedPages.sort((a,b) => b-a).forEach(p => pdfDoc.removePage(p-1));
-    download(await pdfDoc.save(), 'edited.pdf');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }));
+    a.download = 'edited.pdf'; a.click();
 }
 
 export async function extractCurrentPage() {
@@ -31,7 +34,9 @@ export async function extractCurrentPage() {
     const newDoc = await PDFDocument.create();
     const [page] = await newDoc.copyPages(pdfDoc, [state.pageNum - 1]);
     newDoc.addPage(page);
-    download(await newDoc.save(), 'extracted.pdf');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([await newDoc.save()], { type: 'application/pdf' }));
+    a.download = 'extracted.pdf'; a.click();
 }
 
 export async function mergePdfs(files) {
@@ -42,10 +47,7 @@ export async function mergePdfs(files) {
         const pages = await newDoc.copyPages(doc, doc.getPageIndices());
         pages.forEach(p => newDoc.addPage(p));
     }
-    download(await newDoc.save(), 'merged.pdf');
-}
-
-function download(bytes, name) {
-    const blob = new Blob([bytes], { type: 'application/pdf' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([await newDoc.save()], { type: 'application/pdf' }));
+    a.download = 'merged.pdf'; a.click();
 }
