@@ -12,14 +12,17 @@ export const state = {
     deletedPages: []
 };
 
+// Fixed: Added 'export' here
 export const elements = {};
 
 export function initElements() {
     elements.canvasWrapper = document.getElementById('canvas-wrapper');
     elements.pdfCanvas = document.getElementById('pdf-canvas');
-    elements.ctx = elements.pdfCanvas.getContext('2d');
+    if (elements.pdfCanvas) {
+        elements.ctx = elements.pdfCanvas.getContext('2d');
+    }
     
-    // Fix for the scroll-blocking 'wheel' violation
+    // Initialize Fabric Canvas
     elements.fabricCanvas = new fabric.Canvas('fabric-canvas', {
         preserveObjectStacking: true,
         allowTouchScrolling: true
