@@ -37,11 +37,25 @@
                     <input type="file" id="upload-image" accept="image/png, image/jpeg" style="display: none;">
                 </label>
                 <button id="add-signature" class="btn">✍️ Add Signature</button>
-                <button id="ocr-btn" class="btn">🔍 Extract & Edit Text (OCR)</button>
-                <button id="toggle-draw" class="btn">✏️ Draw</button>
+                <button id="ocr-btn" class="btn" style="background-color: #3498db; color: white;">🔍 Advanced OCR Edit</button>
+            </div>
+
+            <div class="tool-group">
+                <button id="highlight-mode" class="btn" style="border-left: 5px solid #f1c40f;">🖍️ Highlight Text</button>
+                <button id="redact-mode" class="btn" style="border-left: 5px solid #000000;">⬛ Redact (Blackout)</button>
+                <button id="toggle-draw" class="btn">✏️ Free Draw</button>
                 <button id="whiteout-mode" class="btn">🧽 Erase (Whiteout)</button>
+            </div>
+
+            <div class="tool-group pagination">
+                <button id="add-rect" class="btn" style="width: 48%;">⬜ Rect</button>
+                <button id="add-circle" class="btn" style="width: 48%;">⭕ Circle</button>
+            </div>
+
+            <div class="tool-group">
                 <button id="delete-selected" class="btn btn-danger">🗑️ Delete Selected</button>
             </div>
+
             <div class="tool-group pagination">
                 <button id="zoom-out" class="btn" style="width: 48%;">➖ Zoom Out</button>
                 <button id="zoom-in" class="btn" style="width: 48%;">➕ Zoom In</button>
