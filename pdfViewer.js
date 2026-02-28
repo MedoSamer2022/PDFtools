@@ -47,7 +47,7 @@ export function saveCurrentPageState() {
 }
 
 export function renderPage(num) {
-    if (state.pageRendering) {
+    if (state.pageRendering || !state.pdfDoc) {
         state.pageNumPending = num;
         return;
     }
@@ -104,34 +104,23 @@ export function rotatePage() {
     renderPage(state.pageNum);
 }
 
-export function queueRenderPage(num) {
-    saveCurrentPageState();
-    if (state.pageRendering) {
-        state.pageNumPending = num;
-    } else {
-        renderPage(num);
-    }
-}
-
 export function prevPage() {
     let next = state.pageNum - 1;
-    while (next > 0 && state.deletedPages.includes(next)) {
-        next--;
-    }
+    while (next > 0 && state.deletedPages.includes(next)) next--;
     if (next <= 0) return;
+    saveCurrentPageState();
     state.pageNum = next;
-    queueRenderPage(state.pageNum);
+    renderPage(state.pageNum);
 }
 
 export function nextPage() {
     if (!state.pdfDoc) return;
     let next = state.pageNum + 1;
-    while (next <= state.pdfDoc.numPages && state.deletedPages.includes(next)) {
-        next++;
-    }
+    while (next <= state.pdfDoc.numPages && state.deletedPages.includes(next)) next++;
     if (next > state.pdfDoc.numPages) return;
+    saveCurrentPageState();
     state.pageNum = next;
-    queueRenderPage(state.pageNum);
+    renderPage(state.pageNum);
 }
 
 export function removeCurrentPage() {
@@ -140,25 +129,8 @@ export function removeCurrentPage() {
         alert("Cannot delete the last remaining page.");
         return;
     }
-    
     state.deletedPages.push(state.pageNum);
-    
-    let next = state.pageNum + 1;
-    while (next <= state.pdfDoc.numPages && state.deletedPages.includes(next)) {
-        next++;
-    }
-    
-    if (next <= state.pdfDoc.numPages) {
-        state.pageNum = next;
-    } else {
-        let prev = state.pageNum - 1;
-        while (prev > 0 && state.deletedPages.includes(prev)) {
-            prev--;
-        }
-        state.pageNum = prev;
-    }
-    
-    queueRenderPage(state.pageNum);
+    nextPage() || prevPage();
 }
 
 export function zoomIn() {
