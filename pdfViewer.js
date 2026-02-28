@@ -1,150 +1,64 @@
-// pdfViewer.js
 import { state, elements } from './state.js';
 
 const pdfjsLib = window['pdfjs-dist/build/pdf'];
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-function updatePageCountDisplay() {
+function updateDisplay() {
     if (!state.pdfDoc) return;
-    const activePages = state.pdfDoc.numPages - state.deletedPages.length;
-    document.getElementById('page-count').textContent = activePages;
-    
-    let displayPageNum = state.pageNum;
-    for (let i = 1; i <= state.pageNum; i++) {
-        if (state.deletedPages.includes(i)) {
-            displayPageNum--;
-        }
-    }
-    document.getElementById('page-num').textContent = displayPageNum;
+    document.getElementById('page-count').textContent = state.pdfDoc.numPages - state.deletedPages.length;
+    let displayNum = state.pageNum;
+    state.deletedPages.forEach(p => { if (p < state.pageNum) displayNum--; });
+    document.getElementById('page-num').textContent = displayNum;
 }
 
 export async function handlePdfUpload(file) {
-    if (!file) return;
-    const fileReader = new FileReader();
-    fileReader.onload = async function() {
-        try {
-            state.originalPdfBytes = this.result;
-            const typedarray = new Uint8Array(state.originalPdfBytes);
-            const pdf = await pdfjsLib.getDocument(typedarray).promise;
-            state.pdfDoc = pdf;
-            state.pageNum = 1;
-            state.fabricPages = {}; 
-            state.deletedPages = [];
-            state.zoomLevel = 1;
-            state.rotation = 0; 
-            renderPage(state.pageNum);
-        } catch (error) {
-            console.error("Error loading PDF:", error);
-        }
+    const reader = new FileReader();
+    reader.onload = async function() {
+        state.originalPdfBytes = this.result;
+        const pdf = await pdfjsLib.getDocument(new Uint8Array(state.originalPdfBytes)).promise;
+        state.pdfDoc = pdf;
+        state.pageNum = 1;
+        state.fabricPages = {}; 
+        state.deletedPages = [];
+        state.rotation = 0;
+        renderPage(state.pageNum);
     };
-    fileReader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(file);
 }
 
 export function saveCurrentPageState() {
-    if (state.pdfDoc && elements.fabricCanvas) {
-        state.fabricPages[state.pageNum] = elements.fabricCanvas.toJSON();
-    }
+    if (elements.fabricCanvas) state.fabricPages[state.pageNum] = elements.fabricCanvas.toJSON();
 }
 
 export function renderPage(num) {
-    if (state.pageRendering || !state.pdfDoc) {
-        state.pageNumPending = num;
-        return;
-    }
-
+    if (state.pageRendering) { state.pageNumPending = num; return; }
     state.pageRendering = true;
-    
     state.pdfDoc.getPage(num).then(page => {
-        const baseScale = 1.5;
-        const viewport = page.getViewport({ scale: baseScale * state.zoomLevel, rotation: state.rotation });
-        
+        const viewport = page.getViewport({ scale: 1.5 * state.zoomLevel, rotation: state.rotation });
         elements.pdfCanvas.height = viewport.height;
         elements.pdfCanvas.width = viewport.width;
         elements.fabricCanvas.setWidth(viewport.width);
         elements.fabricCanvas.setHeight(viewport.height);
-        
         elements.canvasWrapper.style.width = `${viewport.width}px`;
         elements.canvasWrapper.style.height = `${viewport.height}px`;
 
-        elements.fabricCanvas.setZoom(state.zoomLevel);
-
-        const renderContext = { canvasContext: elements.ctx, viewport: viewport };
-        
-        if (state.renderTask !== null) {
-            state.renderTask.cancel();
-        }
-
-        state.renderTask = page.render(renderContext);
-
+        const renderCtx = { canvasContext: elements.ctx, viewport: viewport };
+        if (state.renderTask) state.renderTask.cancel();
+        state.renderTask = page.render(renderCtx);
         state.renderTask.promise.then(() => {
             state.pageRendering = false;
-            updatePageCountDisplay();
-            if (state.pageNumPending !== null) {
-                renderPage(state.pageNumPending);
-                state.pageNumPending = null;
-            }
-        }).catch(err => {
-            state.pageRendering = false;
-            if (err.name !== 'RenderingCancelledException') {
-                console.error('Render error:', err);
-            }
+            updateDisplay();
+            if (state.pageNumPending) { renderPage(state.pageNumPending); state.pageNumPending = null; }
         });
 
         elements.fabricCanvas.clear();
-        if (state.fabricPages[num]) {
-            elements.fabricCanvas.loadFromJSON(state.fabricPages[num], elements.fabricCanvas.renderAll.bind(elements.fabricCanvas));
-        }
+        if (state.fabricPages[num]) elements.fabricCanvas.loadFromJSON(state.fabricPages[num], elements.fabricCanvas.renderAll.bind(elements.fabricCanvas));
     });
 }
 
-export function rotatePage() {
-    if (!state.pdfDoc) return;
-    saveCurrentPageState();
-    state.rotation = (state.rotation + 90) % 360;
-    renderPage(state.pageNum);
-}
-
-export function prevPage() {
-    let next = state.pageNum - 1;
-    while (next > 0 && state.deletedPages.includes(next)) next--;
-    if (next <= 0) return;
-    saveCurrentPageState();
-    state.pageNum = next;
-    renderPage(state.pageNum);
-}
-
-export function nextPage() {
-    if (!state.pdfDoc) return;
-    let next = state.pageNum + 1;
-    while (next <= state.pdfDoc.numPages && state.deletedPages.includes(next)) next++;
-    if (next > state.pdfDoc.numPages) return;
-    saveCurrentPageState();
-    state.pageNum = next;
-    renderPage(state.pageNum);
-}
-
-export function removeCurrentPage() {
-    if (!state.pdfDoc) return;
-    if (state.deletedPages.length >= state.pdfDoc.numPages - 1) {
-        alert("Cannot delete the last remaining page.");
-        return;
-    }
-    state.deletedPages.push(state.pageNum);
-    nextPage() || prevPage();
-}
-
-export function zoomIn() {
-    if (!state.pdfDoc) return;
-    saveCurrentPageState();
-    state.zoomLevel += 0.2;
-    renderPage(state.pageNum);
-}
-
-export function zoomOut() {
-    if (!state.pdfDoc) return;
-    if (state.zoomLevel > 0.4) {
-        saveCurrentPageState();
-        state.zoomLevel -= 0.2;
-        renderPage(state.pageNum);
-    }
-}
+export function rotatePage() { state.rotation = (state.rotation + 90) % 360; renderPage(state.pageNum); }
+export function prevPage() { if (state.pageNum <= 1) return; saveCurrentPageState(); state.pageNum--; renderPage(state.pageNum); }
+export function nextPage() { if (state.pageNum >= state.pdfDoc.numPages) return; saveCurrentPageState(); state.pageNum++; renderPage(state.pageNum); }
+export function zoomIn() { state.zoomLevel += 0.2; renderPage(state.pageNum); }
+export function zoomOut() { if (state.zoomLevel > 0.4) { state.zoomLevel -= 0.2; renderPage(state.pageNum); } }
+export function removeCurrentPage() { state.deletedPages.push(state.pageNum); nextPage() || prevPage(); }
