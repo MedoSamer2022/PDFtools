@@ -1,213 +1,95 @@
 // tools.js
-import { elements } from './state.js'; // ONLY ONE IMPORT AT THE TOP
 
-/**
- * 🔒 Utility: Disable drawing modes and hide toolbars
- */
-export function disableDrawingMode() {
-    if (!elements.fabricCanvas) return;
-    elements.fabricCanvas.isDrawingMode = false;
-    
-    const textToolbar = document.getElementById('text-toolbar');
-    const brushToolbar = document.getElementById('brush-toolbar');
-    if (textToolbar) textToolbar.style.display = 'none';
-    if (brushToolbar) brushToolbar.style.display = 'none';
-}
-
-/**
- * 👆 Tool: Select Mode
- */
-export function enableCursorMode() {
-    disableDrawingMode();
-}
-
-/**
- * 📝 Tool: Add Editable Text
- */
-export function addText() {
-    disableDrawingMode();
-    const text = new fabric.IText('Double click to edit', {
-        left: 100, top: 100, fontSize: 24, fontFamily: 'Arial',
-        fill: '#000000', cornerColor: '#3498db', transparentCorners: false
-    });
-    elements.fabricCanvas.add(text).setActiveObject(text);
-}
-
-/**
- * 🎨 UI: Sync Text Toolbar with selected object
- */
-export function syncTextToolbar() {
-    const obj = elements.fabricCanvas.getActiveObject();
-    const tb = document.getElementById('text-toolbar');
-    if (obj && obj.type === 'i-text') {
-        if (tb) tb.style.display = 'flex';
-        document.getElementById('font-family').value = obj.fontFamily || 'Arial';
-        document.getElementById('font-size').value = obj.fontSize || 24;
-        document.getElementById('font-color').value = obj.fill || '#000000';
-    } else if (tb) {
-        tb.style.display = 'none';
-    }
-}
-
-/**
- * 🛠️ Action: Update Text Properties
- */
-export function updateTextProperty(prop, val) {
-    const obj = elements.fabricCanvas.getActiveObject();
-    if (obj && obj.type === 'i-text') {
-        if (prop === 'fontWeight') {
-            obj.set('fontWeight', obj.fontWeight === 'bold' ? 'normal' : 'bold');
-        } else if (prop === 'fontStyle') {
-            obj.set('fontStyle', obj.fontStyle === 'italic' ? 'normal' : 'italic');
-        } else {
-            obj.set(prop, prop === 'fontSize' ? parseInt(val) : val);
-        }
-        elements.fabricCanvas.renderAll();
-    }
-}
-
-/**
- * 🖌️ Brush Logic: Update Color/Size
- */
-export function updateBrush() {
-    const color = document.getElementById('brush-color').value;
-    const size = parseInt(document.getElementById('brush-size').value);
-    elements.fabricCanvas.freeDrawingBrush.color = color;
-    elements.fabricCanvas.freeDrawingBrush.width = size;
-}
-
-/**
- * 🖍️ Tool: Drawing Modes
- */
-export function enableDrawMode() {
-    disableDrawingMode();
-    elements.fabricCanvas.isDrawingMode = true;
-    document.getElementById('brush-toolbar').style.display = 'flex';
-    updateBrush();
-}
-
-export function enableHighlightMode() {
-    enableDrawMode();
-    elements.fabricCanvas.freeDrawingBrush.color = 'rgba(255, 255, 0, 0.4)';
-    updateBrush();
-}
-
-export function enableWhiteoutMode() {
-    enableDrawMode();
-    elements.fabricCanvas.freeDrawingBrush.color = '#ffffff';
-    elements.fabricCanvas.freeDrawingBrush.width = 30;
-}
-
-export function enableRedactionMode() {
-    enableDrawMode();
-    elements.fabricCanvas.freeDrawingBrush.color = '#000000';
-}
-
-/**
- * 🟦 Tool: Shapes
- */
-export function addRectangle() {
-    disableDrawingMode();
-    elements.fabricCanvas.add(new fabric.Rect({
-        left: 150, top: 150, width: 100, height: 60,
-        fill: 'transparent', stroke: 'red', strokeWidth: 2
-    }));
-}
-
-export function addCircle() {
-    disableDrawingMode();
-    elements.fabricCanvas.add(new fabric.Circle({
-        left: 150, top: 150, radius: 40,
-        fill: 'transparent', stroke: 'blue', strokeWidth: 2
-    }));
-}
-
-/**
- * 🗑️ Action: Delete Selection
- */
-export function deleteSelected() {
-    elements.fabricCanvas.getActiveObjects().forEach(o => elements.fabricCanvas.remove(o));
-    elements.fabricCanvas.discardActiveObject();
-}
-
-/**
- * 🔍 Tool: Advanced OCR with Progress
- */
 export async function performOCR() {
     disableDrawingMode();
+    if (!elements.pdfCanvas) return;
+
     const progressCont = document.getElementById('ocr-progress-container');
     const bar = document.getElementById('ocr-progress-bar');
-    const status = document.getElementById('ocr-status-text');
-    if (!progressCont || !elements.pdfCanvas) return;
-
+    const statusText = document.getElementById('ocr-status-text');
+    
     progressCont.style.display = 'block';
+    statusText.innerText = "Enhancing Image Quality...";
 
     try {
+        // 1. Create a High-Resolution "Ghost" Canvas
+        // Upscaling by 3x helps the AI see small or blurry text much better
+        const scale = 3; 
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = elements.pdfCanvas.width * scale;
+        tempCanvas.height = elements.pdfCanvas.height * scale;
+        const tCtx = tempCanvas.getContext('2d');
+        
+        tCtx.scale(scale, scale);
+        tCtx.drawImage(elements.pdfCanvas, 0, 0);
+
+        // 2. Image Pre-Processing (Binarization)
+        // This removes shadows and makes the text pure black on pure white
+        const imageData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        const pixels = imageData.data;
+        for (let i = 0; i < pixels.length; i += 4) {
+            // Calculate brightness (Luminance)
+            const brightness = (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114);
+            // Threshold: If it's dark, make it black (0). If it's light, make it white (255).
+            const thresholdValue = brightness < 150 ? 0 : 255; 
+            pixels[i] = pixels[i + 1] = pixels[i + 2] = thresholdValue;
+        }
+        tCtx.putImageData(imageData, 0, 0);
+
+        // 3. Initialize Worker with Arabic + English
         const worker = await Tesseract.createWorker('eng+ara', 1, {
             logger: m => {
                 if (m.status === 'recognizing text') {
                     const p = Math.round(m.progress * 100);
                     bar.style.width = `${p}%`;
-                    status.innerText = `Recognizing: ${p}%`;
+                    statusText.innerText = `Recognizing Text: ${p}%`;
                 }
             }
         });
 
-        const { data } = await worker.recognize(elements.pdfCanvas);
-        data.words.forEach(w => {
-            if (w.confidence < 60) return;
+        // 4. Set Advanced Parameters
+        await worker.setParameters({
+            tessedit_pageseg_mode: '3', // Auto layout detection (finds columns/tables)
+            preserve_interword_spaces: '1',
+            tessjs_create_hocr: '1'
+        });
+
+        const { data } = await worker.recognize(tempCanvas);
+
+        // 5. Adobe-Style Reconstruction
+        data.words.forEach(word => {
+            // Only add text if the AI is reasonably sure (Confidence > 50)
+            if (word.confidence < 50 || word.text.trim().length === 0) return;
+
+            const x = word.bbox.x0 / scale;
+            const y = word.bbox.y0 / scale;
+            const w = (word.bbox.x1 - word.bbox.x0) / scale;
+            const h = (word.bbox.y1 - word.bbox.y0) / scale;
+
+            // Whiteout original area
             elements.fabricCanvas.add(new fabric.Rect({
-                left: w.bbox.x0, top: w.bbox.y0, width: w.bbox.x1 - w.bbox.x0, height: w.bbox.y1 - w.bbox.y0,
+                left: x, top: y, width: w, height: h,
                 fill: 'white', selectable: false
             }));
-            elements.fabricCanvas.add(new fabric.IText(w.text, {
-                left: w.bbox.x0, top: w.bbox.y0, fontSize: (w.bbox.y1 - w.bbox.y0) * 0.8, fontFamily: 'Arial'
-            }));
+
+            // Add Editable Text
+            const text = new fabric.IText(word.text, {
+                left: x,
+                top: y,
+                fontSize: h * 0.85,
+                fontFamily: 'Arial',
+                fill: '#000000',
+                transparentCorners: false,
+                cornerColor: '#3498db'
+            });
+            elements.fabricCanvas.add(text);
         });
+
         await worker.terminate();
-    } catch (e) { console.error(e); }
-    finally {
+    } catch (e) {
+        console.error("OCR Failed:", e);
+    } finally {
         progressCont.style.display = 'none';
         elements.fabricCanvas.renderAll();
     }
-}
-
-/**
- * ✍️ Tool: Signature Pad Logic
- */
-let sigPad, sigCtx, isDrawingSig = false;
-
-export function initSignaturePad() {
-    sigPad = document.getElementById('signature-pad');
-    if (!sigPad) return;
-    sigCtx = sigPad.getContext('2d');
-    sigCtx.lineWidth = 2; sigCtx.lineCap = 'round'; sigCtx.strokeStyle = '#000';
-    
-    sigPad.onmousedown = (e) => { isDrawingSig = true; sigCtx.beginPath(); sigCtx.moveTo(e.offsetX, e.offsetY); };
-    sigPad.onmousemove = (e) => { if (isDrawingSig) { sigCtx.lineTo(e.offsetX, e.offsetY); sigCtx.stroke(); } };
-    sigPad.onmouseup = () => isDrawingSig = false;
-}
-
-export function openSignatureModal() {
-    document.getElementById('signature-modal').style.display = 'flex';
-    if (!sigPad) initSignaturePad();
-    clearSignature(); 
-}
-
-export function closeSignatureModal() {
-    const modal = document.getElementById('signature-modal');
-    if (modal) modal.style.display = 'none';
-}
-
-export function clearSignature() {
-    if (sigCtx) sigCtx.clearRect(0, 0, sigPad.width, sigPad.height);
-}
-
-export function saveSignature() {
-    if (!sigPad) return;
-    fabric.Image.fromURL(sigPad.toDataURL(), (img) => {
-        img.set({ left: 100, top: 100 }).scaleToWidth(150);
-        elements.fabricCanvas.add(img);
-        closeSignatureModal();
-    });
 }
