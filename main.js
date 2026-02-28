@@ -41,11 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('extract-page')?.addEventListener('click', extractCurrentPage);
-
     document.getElementById('prev-page')?.addEventListener('click', prevPage);
     document.getElementById('next-page')?.addEventListener('click', nextPage);
     document.getElementById('remove-page')?.addEventListener('click', removeCurrentPage);
-    
     document.getElementById('zoom-in')?.addEventListener('click', zoomIn);
     document.getElementById('zoom-out')?.addEventListener('click', zoomOut);
 
@@ -66,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
             const activeElement = document.activeElement;
-            if (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA') {
+            if (activeElement && activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA') {
                 deleteSelected();
             }
         }
