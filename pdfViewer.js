@@ -19,18 +19,23 @@ function updatePageCountDisplay() {
 }
 
 export async function handlePdfUpload(file) {
-    try {
-        state.originalPdfBytes = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: state.originalPdfBytes }).promise;
-        state.pdfDoc = pdf;
-        state.pageNum = 1;
-        state.fabricPages = {}; 
-        state.deletedPages = [];
-        state.zoomLevel = 1; // Reset zoom on new file
-        renderPage(state.pageNum);
-    } catch (error) {
-        console.error("Error loading PDF:", error);
-    }
+    const fileReader = new FileReader();
+    fileReader.onload = async function() {
+        try {
+            state.originalPdfBytes = this.result;
+            const typedarray = new Uint8Array(state.originalPdfBytes);
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+            state.pdfDoc = pdf;
+            state.pageNum = 1;
+            state.fabricPages = {}; 
+            state.deletedPages = [];
+            state.zoomLevel = 1; 
+            renderPage(state.pageNum);
+        } catch (error) {
+            console.error("Error loading PDF:", error);
+        }
+    };
+    fileReader.readAsArrayBuffer(file);
 }
 
 export function saveCurrentPageState() {
@@ -48,7 +53,7 @@ export function renderPage(num) {
     state.pageRendering = true;
     
     state.pdfDoc.getPage(num).then(page => {
-        const viewport = page.getViewport({ scale: 1.5 });
+        const viewport = page.getViewport({ scale: 1.5 * state.zoomLevel });
         
         elements.pdfCanvas.height = viewport.height;
         elements.pdfCanvas.width = viewport.width;
@@ -58,8 +63,8 @@ export function renderPage(num) {
         elements.canvasWrapper.style.width = `${viewport.width}px`;
         elements.canvasWrapper.style.height = `${viewport.height}px`;
         
-        // استخدام خاصية zoom لضمان عمل أشرطة التمرير وتوافق إحداثيات الماوس
-        elements.canvasWrapper.style.zoom = state.zoomLevel;
+        elements.canvasWrapper.style.transform = 'none';
+        elements.canvasWrapper.style.zoom = 'normal';
 
         const renderContext = { canvasContext: elements.ctx, viewport: viewport };
         
@@ -87,6 +92,8 @@ export function renderPage(num) {
         if (state.fabricPages[num]) {
             elements.fabricCanvas.loadFromJSON(state.fabricPages[num], elements.fabricCanvas.renderAll.bind(elements.fabricCanvas));
         }
+        
+        elements.fabricCanvas.setZoom(1); 
     });
 }
 
@@ -149,14 +156,16 @@ export function removeCurrentPage() {
 
 export function zoomIn() {
     if (!state.pdfDoc) return;
+    saveCurrentPageState();
     state.zoomLevel += 0.2;
-    elements.canvasWrapper.style.zoom = state.zoomLevel;
+    renderPage(state.pageNum);
 }
 
 export function zoomOut() {
     if (!state.pdfDoc) return;
     if (state.zoomLevel > 0.4) {
+        saveCurrentPageState();
         state.zoomLevel -= 0.2;
-        elements.canvasWrapper.style.zoom = state.zoomLevel;
+        renderPage(state.pageNum);
     }
 }
