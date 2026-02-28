@@ -1,8 +1,8 @@
 // main.js
 import { initElements } from './state.js';
-import { handlePdfUpload, prevPage, nextPage, zoomIn, zoomOut } from './pdfViewer.js';
-import { enableCursorMode, addText, addImage, enableDrawMode, enableWhiteoutMode, deleteSelected, performOCR } from './tools.js';
-import { exportPdf } from './exporter.js';
+import { handlePdfUpload, prevPage, nextPage, removeCurrentPage, zoomIn, zoomOut } from './pdfViewer.js';
+import { enableCursorMode, addText, addImage, enableDrawMode, enableWhiteoutMode, deleteSelected, performOCR, openSignatureModal, closeSignatureModal, clearSignature, saveSignature } from './tools.js';
+import { exportPdf, mergePdfs, extractCurrentPage } from './exporter.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initElements();
@@ -29,8 +29,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const mergePdfsInput = document.getElementById('merge-pdfs');
+    if (mergePdfsInput) {
+        mergePdfsInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                mergePdfs(files);
+            }
+            e.target.value = '';
+        });
+    }
+
+    document.getElementById('extract-page')?.addEventListener('click', extractCurrentPage);
+
     document.getElementById('prev-page')?.addEventListener('click', prevPage);
     document.getElementById('next-page')?.addEventListener('click', nextPage);
+    document.getElementById('remove-page')?.addEventListener('click', removeCurrentPage);
     
     document.getElementById('zoom-in')?.addEventListener('click', zoomIn);
     document.getElementById('zoom-out')?.addEventListener('click', zoomOut);
@@ -41,6 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('whiteout-mode')?.addEventListener('click', enableWhiteoutMode);
     document.getElementById('delete-selected')?.addEventListener('click', deleteSelected);
     document.getElementById('ocr-btn')?.addEventListener('click', performOCR);
+
+    document.getElementById('add-signature')?.addEventListener('click', openSignatureModal);
+    document.getElementById('cancel-sig')?.addEventListener('click', closeSignatureModal);
+    document.getElementById('clear-sig')?.addEventListener('click', clearSignature);
+    document.getElementById('save-sig')?.addEventListener('click', saveSignature);
 
     document.getElementById('export-pdf')?.addEventListener('click', exportPdf);
     
