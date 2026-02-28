@@ -42,6 +42,9 @@ export function renderPage(num) {
         
         elements.canvasWrapper.style.width = `${viewport.width}px`;
         elements.canvasWrapper.style.height = `${viewport.height}px`;
+        
+        elements.canvasWrapper.style.transform = `scale(${state.zoomLevel})`;
+        elements.canvasWrapper.style.transformOrigin = 'top left';
 
         const renderContext = { canvasContext: elements.ctx, viewport: viewport };
         
@@ -92,4 +95,16 @@ export function nextPage() {
     if (!state.pdfDoc || state.pageNum >= state.pdfDoc.numPages) return;
     state.pageNum++;
     queueRenderPage(state.pageNum);
+}
+
+export function zoomIn() {
+    state.zoomLevel += 0.2;
+    elements.canvasWrapper.style.transform = `scale(${state.zoomLevel})`;
+}
+
+export function zoomOut() {
+    if (state.zoomLevel > 0.4) {
+        state.zoomLevel -= 0.2;
+        elements.canvasWrapper.style.transform = `scale(${state.zoomLevel})`;
+    }
 }
