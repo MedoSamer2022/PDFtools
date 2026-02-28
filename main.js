@@ -1,42 +1,94 @@
-// main.js
+import { initElements, elements } from './state.js';
+import { handlePdfUpload, prevPage, nextPage, removeCurrentPage, zoomIn, zoomOut, rotatePage } from './pdfViewer.js';
+import { 
+    enableCursorMode, addText, addRectangle, addCircle,
+    enableDrawMode, enableWhiteoutMode, enableHighlightMode, enableRedactionMode,
+    deleteSelected, performOCR, updateBrush,
+    openSignatureModal, closeSignatureModal, clearSignature, saveSignature,
+    syncTextToolbar, updateTextProperty
+} from './tools.js';
+import { exportPdf, mergePdfs, extractCurrentPage } from './exporter.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     initElements();
 
-    // Helper to safely attach events
-    const attach = (id, fn, event = 'onclick') => {
+    // Helper to safely attach events to elements that might be null
+    const safeAttach = (id, fn, eventType = 'onclick') => {
         const el = document.getElementById(id);
-        if (el) el[event] = fn;
-        else console.warn(`Element with ID "${id}" was not found in HTML.`);
+        if (el) {
+            el[eventType] = fn;
+        } else {
+            console.warn(`Element with ID "${id}" not found. skipping event attachment.`);
+        }
     };
 
-    // File Uploads
-    attach('upload-pdf', (e) => handlePdfUpload(e.target.files[0]), 'onchange');
-    attach('merge-pdfs', (e) => mergePdfs(e.target.files), 'onchange');
+    // --- Fabric.js Selection Events ---
+    if (elements.fabricCanvas) {
+        elements.fabricCanvas.on('selection:created', syncTextToolbar);
+        elements.fabricCanvas.on('selection:updated', syncTextToolbar);
+        elements.fabricCanvas.on('selection:cleared', syncTextToolbar);
+    }
 
-    // Sidebar Tools
-    attach('rotate-page', rotatePage);
-    attach('cursor-mode', enableCursorMode);
-    attach('add-text', addText);
-    attach('highlight-mode', enableHighlightMode);
-    attach('redact-mode', enableRedactionMode);
-    attach('toggle-draw', enableDrawMode);
-    attach('whiteout-mode', enableWhiteoutMode);
-    attach('delete-selected', deleteSelected);
-    attach('ocr-btn', performOCR);
+    // --- Text Toolbar Listeners ---
+    safeAttach('font-family', (e) => updateTextProperty('fontFamily', e.target.value), 'onchange');
+    safeAttach('font-size', (e) => updateTextProperty('fontSize', e.target.value), 'oninput');
+    safeAttach('font-color', (e) => updateTextProperty('fill', e.target.value), 'oninput');
+    safeAttach('font-bold', () => updateTextProperty('fontWeight'));
+    safeAttach('font-italic', () => updateTextProperty('fontStyle'));
 
-    // Navigation & Zoom
-    attach('prev-page', prevPage);
-    attach('next-page', nextPage);
-    attach('zoom-in', zoomIn);
-    attach('zoom-out', zoomOut);
-    attach('remove-page', removeCurrentPage);
+    // --- Brush Toolbar Listeners ---
+    safeAttach('brush-color', updateBrush, 'oninput');
+    safeAttach('brush-size', updateBrush, 'oninput');
 
-    // Signature Modal
-    attach('add-signature', openSignatureModal);
-    attach('save-sig', saveSignature);
-    attach('cancel-sig', closeSignatureModal);
+    // --- File Operations ---
+    safeAttach('upload-pdf', (e) => {
+        const file = e.target.files[0];
+        if (file) handlePdfUpload(file);
+    }, 'onchange');
 
-    // Export & Extraction
-    attach('export-pdf', exportPdf);
-    attach('extract-page', extractCurrentPage);
+    safeAttach('merge-pdfs', (e) => {
+        if (e.target.files.length > 0) mergePdfs(e.target.files);
+    }, 'onchange');
+
+    safeAttach('extract-page', extractCurrentPage);
+
+    // --- Editor Tools ---
+    safeAttach('cursor-mode', enableCursorMode);
+    safeAttach('add-text', addText);
+    safeAttach('add-rect', addRectangle);
+    safeAttach('add-circle', addCircle);
+    safeAttach('highlight-mode', enableHighlightMode);
+    safeAttach('redact-mode', enableRedactionMode);
+    safeAttach('toggle-draw', enableDrawMode);
+    safeAttach('whiteout-mode', enableWhiteoutMode);
+    safeAttach('delete-selected', deleteSelected);
+    safeAttach('ocr-btn', performOCR);
+    safeAttach('rotate-page', rotatePage);
+
+    // --- Navigation & View ---
+    safeAttach('prev-page', prevPage);
+    safeAttach('next-page', nextPage);
+    safeAttach('zoom-in', zoomIn);
+    safeAttach('zoom-out', zoomOut);
+    safeAttach('remove-page', removeCurrentPage);
+
+    // --- Signature Modal ---
+    safeAttach('add-signature', openSignatureModal);
+    safeAttach('save-sig', saveSignature);
+    safeAttach('cancel-sig', closeSignatureModal);
+    safeAttach('clear-sig', clearSignature);
+
+    // --- Final Actions ---
+    safeAttach('export-pdf', exportPdf);
+
+    // --- Keyboard Shortcuts ---
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            const active = document.activeElement;
+            // Don't delete if typing in an input or textarea
+            if (active && active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA') {
+                deleteSelected();
+            }
+        }
+    });
 });
