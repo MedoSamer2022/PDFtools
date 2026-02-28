@@ -67,3 +67,54 @@ export function deleteSelected() {
         activeObjects.forEach(object => elements.fabricCanvas.remove(object));
     }
 }
+
+// tools.js (أضف هذه الدالة)
+export async function performOCR() {
+    disableDrawingMode();
+    const pdfCanvas = document.getElementById('pdf-canvas');
+    
+    // إظهار حالة التحميل للمستخدم
+    const ocrBtn = document.getElementById('ocr-btn');
+    const originalText = ocrBtn.innerText;
+    ocrBtn.innerText = "⏳ جاري التعرف...";
+    ocrBtn.disabled = true;
+
+    try {
+        const worker = await Tesseract.createWorker('ara+eng');
+        const { data } = await worker.recognize(pdfCanvas);
+
+        data.lines.forEach(line => {
+            if (line.text.trim().length === 0) return;
+
+            const rect = new fabric.Rect({
+                left: line.bbox.x0,
+                top: line.bbox.y0,
+                width: line.bbox.x1 - line.bbox.x0,
+                height: line.bbox.y1 - line.bbox.y0,
+                fill: 'white',
+                selectable: false
+            });
+            elements.fabricCanvas.add(rect);
+
+            const text = new fabric.IText(line.text.trim(), {
+                left: line.bbox.x0,
+                top: line.bbox.y0,
+                fontFamily: 'Segoe UI',
+                fill: '#000000',
+                fontSize: (line.bbox.y1 - line.bbox.y0) * 0.8,
+                transparentCorners: false,
+                cornerColor: 'blue',
+                direction: 'rtl'
+            });
+            elements.fabricCanvas.add(text);
+        });
+
+        await worker.terminate();
+    } catch (error) {
+        console.error(error);
+    } finally {
+        ocrBtn.innerText = originalText;
+        ocrBtn.disabled = false;
+        elements.fabricCanvas.renderAll();
+    }
+}
