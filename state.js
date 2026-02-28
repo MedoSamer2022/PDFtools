@@ -7,7 +7,8 @@ export const state = {
     originalPdfBytes: null,
     fabricPages: {},
     renderTask: null,
-    zoomLevel: 1
+    zoomLevel: 1,
+    deletedPages: []
 };
 
 export const elements = {};
