@@ -76,8 +76,6 @@ export function addRectangle() {
     elements.fabricCanvas.add(rect);
     elements.fabricCanvas.setActiveObject(rect);
 }
-
-// FIX: Ensure 'export' is here!
 export function addCircle() { 
     disableDrawingMode();
     const circle = new fabric.Circle({ 
