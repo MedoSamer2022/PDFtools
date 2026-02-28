@@ -56,7 +56,6 @@ export function renderPage(num) {
     
     state.pdfDoc.getPage(num).then(page => {
         const baseScale = 1.5;
-        // Apply rotation to viewport
         const viewport = page.getViewport({ scale: baseScale * state.zoomLevel, rotation: state.rotation });
         
         elements.pdfCanvas.height = viewport.height;
@@ -98,7 +97,6 @@ export function renderPage(num) {
     });
 }
 
-// Fixed: Properly exporting rotatePage
 export function rotatePage() {
     if (!state.pdfDoc) return;
     saveCurrentPageState();
