@@ -95,32 +95,51 @@ export async function performOCR() {
     if (!ocrBtn) return;
     
     const originalText = ocrBtn.innerText;
-    ocrBtn.innerText = "⏳ Processing...";
+    ocrBtn.innerText = "⏳ Processing (High Quality)...";
     ocrBtn.disabled = true;
 
     try {
+        const scale = 2.5; 
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = elements.pdfCanvas.width * scale;
+        tempCanvas.height = elements.pdfCanvas.height * scale;
+        const tCtx = tempCanvas.getContext('2d');
+        tCtx.scale(scale, scale);
+        tCtx.drawImage(elements.pdfCanvas, 0, 0);
+
         const worker = await Tesseract.createWorker('eng+ara');
-        const { data } = await worker.recognize(elements.pdfCanvas);
+        await worker.setParameters({
+            tessedit_pageseg_mode: '3',
+        });
+
+        const { data } = await worker.recognize(tempCanvas);
 
         data.lines.forEach(line => {
-            if (line.text.trim().length === 0) return;
+            if (line.text.trim().length === 0 || line.confidence < 50) return;
+
+            const x0 = line.bbox.x0 / scale;
+            const y0 = line.bbox.y0 / scale;
+            const x1 = line.bbox.x1 / scale;
+            const y1 = line.bbox.y1 / scale;
+            const width = x1 - x0;
+            const height = y1 - y0;
 
             const rect = new fabric.Rect({
-                left: line.bbox.x0,
-                top: line.bbox.y0,
-                width: line.bbox.x1 - line.bbox.x0,
-                height: line.bbox.y1 - line.bbox.y0,
+                left: x0,
+                top: y0,
+                width: width,
+                height: height,
                 fill: 'white',
                 selectable: false
             });
             elements.fabricCanvas.add(rect);
 
             const text = new fabric.IText(line.text.trim(), {
-                left: line.bbox.x0,
-                top: line.bbox.y0,
+                left: x0,
+                top: y0,
                 fontFamily: 'Segoe UI',
                 fill: '#000000',
-                fontSize: Math.max(12, (line.bbox.y1 - line.bbox.y0) * 0.8),
+                fontSize: Math.max(10, height * 0.8),
                 transparentCorners: false,
                 cornerColor: 'blue'
             });
