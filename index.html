@@ -72,7 +72,22 @@
                 <button id="export-pdf" class="btn btn-success">💾 Save & Download</button>
             </div>
         </aside>
-        <main class="viewer">
+        <main class="viewer" style="position: relative;">
+            
+            <div id="text-toolbar" class="text-toolbar" style="display: none;">
+                <select id="font-family">
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+                <input type="number" id="font-size" value="24" min="8" max="120" style="width: 60px;">
+                <input type="color" id="font-color" value="#000000">
+                <button id="font-bold"><b>B</b></button>
+                <button id="font-italic"><i>I</i></button>
+            </div>
+
             <div class="canvas-container-wrapper" id="canvas-wrapper">
                 <canvas id="pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
                 <canvas id="fabric-canvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
