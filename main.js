@@ -1,7 +1,12 @@
 // main.js
 import { initElements } from './state.js';
 import { handlePdfUpload, prevPage, nextPage, removeCurrentPage, zoomIn, zoomOut } from './pdfViewer.js';
-import { enableCursorMode, addText, addImage, enableDrawMode, enableWhiteoutMode, deleteSelected, performOCR, openSignatureModal, closeSignatureModal, clearSignature, saveSignature } from './tools.js';
+import { 
+    enableCursorMode, addText, addImage, addRectangle, addCircle,
+    enableDrawMode, enableWhiteoutMode, enableHighlightMode, enableRedactionMode,
+    deleteSelected, performOCR, 
+    openSignatureModal, closeSignatureModal, clearSignature, saveSignature 
+} from './tools.js';
 import { exportPdf, mergePdfs, extractCurrentPage } from './exporter.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Page Actions
     document.getElementById('extract-page')?.addEventListener('click', extractCurrentPage);
     document.getElementById('prev-page')?.addEventListener('click', prevPage);
     document.getElementById('next-page')?.addEventListener('click', nextPage);
@@ -47,20 +53,31 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('zoom-in')?.addEventListener('click', zoomIn);
     document.getElementById('zoom-out')?.addEventListener('click', zoomOut);
 
+    // Premium Tools
     document.getElementById('cursor-mode')?.addEventListener('click', enableCursorMode);
     document.getElementById('add-text')?.addEventListener('click', addText);
+    document.getElementById('add-rect')?.addEventListener('click', addRectangle);
+    document.getElementById('add-circle')?.addEventListener('click', addCircle);
+    
+    // Brushes
     document.getElementById('toggle-draw')?.addEventListener('click', enableDrawMode);
     document.getElementById('whiteout-mode')?.addEventListener('click', enableWhiteoutMode);
+    document.getElementById('highlight-mode')?.addEventListener('click', enableHighlightMode);
+    document.getElementById('redact-mode')?.addEventListener('click', enableRedactionMode);
+    
     document.getElementById('delete-selected')?.addEventListener('click', deleteSelected);
     document.getElementById('ocr-btn')?.addEventListener('click', performOCR);
 
+    // Signature
     document.getElementById('add-signature')?.addEventListener('click', openSignatureModal);
     document.getElementById('cancel-sig')?.addEventListener('click', closeSignatureModal);
     document.getElementById('clear-sig')?.addEventListener('click', clearSignature);
     document.getElementById('save-sig')?.addEventListener('click', saveSignature);
 
+    // Export
     document.getElementById('export-pdf')?.addEventListener('click', exportPdf);
     
+    // Global Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
             const activeElement = document.activeElement;
