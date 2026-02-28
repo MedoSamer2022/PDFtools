@@ -92,6 +92,11 @@
                 <canvas id="pdf-canvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
                 <canvas id="fabric-canvas" style="position: absolute; top: 0; left: 0; z-index: 2;"></canvas>
             </div>
+            <div id="brush-toolbar" class="text-toolbar" style="display: none; top: 80px;">
+    <span style="color: #2c3e50; font-size: 12px; font-weight: bold;">Brush:</span>
+    <input type="color" id="brush-color" value="#ff0000">
+    <input type="range" id="brush-size" min="1" max="100" value="5" style="width: 80px;">
+</div>
         </main>
     </div>
 
@@ -108,5 +113,6 @@
     </div>
 
     <script type="module" src="main.js"></script>
+    
 </body>
 </html>
