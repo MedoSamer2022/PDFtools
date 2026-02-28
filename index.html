@@ -23,25 +23,25 @@
             </div>
             
             <div class="tool-group">
-                <label class="btn file-label" style="background-color: #8e44ad; color: white;">
+                <label class="btn file-label" style="background-color: #8e44ad; color: white; display: block; text-align: center; cursor: pointer;">
                     🔗 Merge PDFs
                     <input type="file" id="merge-pdfs" accept="application/pdf" multiple style="display: none;">
                 </label>
-                <button id="extract-page" class="btn" style="background-color: #9b59b6; color: white;">✂️ Extract Page</button>
+                <button id="extract-page" class="btn" style="background-color: #9b59b6; color: white;">✂️ Extract Current Page</button>
             </div>
 
             <div class="tool-group">
                 <button id="cursor-mode" class="btn">👆 Select / Move</button>
                 <button id="add-text" class="btn">📝 Add Text</button>
                 <button id="add-signature" class="btn">✍️ Add Signature</button>
-                <button id="ocr-btn" class="btn" style="background-color: #3498db; color: white;">🔍 OCR Edit</button>
+                <button id="ocr-btn" class="btn" style="background-color: #3498db; color: white;">🔍 Advanced OCR Edit</button>
             </div>
 
             <div class="tool-group">
-                <button id="highlight-mode" class="btn">🖍️ Highlight</button>
-                <button id="redact-mode" class="btn">⬛ Redact</button>
+                <button id="highlight-mode" class="btn" style="border-left: 5px solid #f1c40f;">🖍️ Highlight</button>
+                <button id="redact-mode" class="btn" style="border-left: 5px solid #000000;">⬛ Redact</button>
                 <button id="toggle-draw" class="btn">✏️ Free Draw</button>
-                <button id="whiteout-mode" class="btn">🧽 Erase</button>
+                <button id="whiteout-mode" class="btn">🧽 Erase (Whiteout)</button>
             </div>
 
             <div class="tool-group">
@@ -51,7 +51,7 @@
 
             <div class="tool-group">
                 <button id="rotate-page" class="btn" style="background-color: #f39c12; color: white;">🔄 Rotate 90°</button>
-                <button id="delete-selected" class="btn btn-danger">🗑️ Delete Object</button>
+                <button id="delete-selected" class="btn btn-danger">🗑️ Delete Selected</button>
             </div>
 
             <div class="tool-group pagination">
@@ -72,17 +72,18 @@
         </aside>
 
         <main class="viewer">
+            <div id="ocr-progress-container" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 300px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; text-align: center;">
+                <div id="ocr-status-text" style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Initializing OCR...</div>
+                <div style="width: 100%; background: #eee; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div id="ocr-progress-bar" style="width: 0%; height: 100%; background: #3498db; transition: width 0.2s;"></div>
+                </div>
+            </div>
+
             <div id="text-toolbar" class="text-toolbar" style="display: none;">
                 <select id="font-family">
                     <option value="Arial">Arial</option>
                     <option value="Times New Roman">Times New Roman</option>
                     <option value="Courier New">Courier New</option>
-                    <div id="ocr-progress-container" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 300px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; text-align: center;">
-    <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #2c3e50;" id="ocr-status-text">Initializing OCR...</div>
-    <div style="width: 100%; background: #eee; height: 10px; border-radius: 5px; overflow: hidden;">
-        <div id="ocr-progress-bar" style="width: 0%; height: 100%; background: #3498db; transition: width 0.2s;"></div>
-    </div>
-</div>
                 </select>
                 <input type="number" id="font-size" value="24" style="width: 50px;">
                 <input type="color" id="font-color" value="#000000">
