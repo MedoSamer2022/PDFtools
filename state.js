@@ -6,7 +6,8 @@ export const state = {
     pageNumPending: null,
     originalPdfBytes: null,
     fabricPages: {},
-    renderTask: null
+    renderTask: null,
+    zoomLevel: 1
 };
 
 export const elements = {};
