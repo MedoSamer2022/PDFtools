@@ -14,6 +14,7 @@
     <div class="app-container">
         <aside class="sidebar">
             <h2>PDF Editor Pro</h2>
+            
             <div class="tool-group">
                 <label class="btn btn-primary file-label">
                     Open PDF
@@ -22,10 +23,18 @@
             </div>
             
             <div class="tool-group">
+                <label class="btn file-label" style="background-color: #8e44ad; color: white;">
+                    🔗 Merge PDFs
+                    <input type="file" id="merge-pdfs" accept="application/pdf" multiple style="display: none;">
+                </label>
+                <button id="extract-page" class="btn" style="background-color: #9b59b6; color: white;">✂️ Extract Page</button>
+            </div>
+
+            <div class="tool-group">
                 <button id="cursor-mode" class="btn">👆 Select / Move</button>
                 <button id="add-text" class="btn">📝 Add Text</button>
                 <button id="add-signature" class="btn">✍️ Add Signature</button>
-                <button id="ocr-btn" class="btn" style="background-color: #3498db; color: white;">🔍 Advanced OCR Edit</button>
+                <button id="ocr-btn" class="btn" style="background-color: #3498db; color: white;">🔍 OCR Edit</button>
             </div>
 
             <div class="tool-group">
@@ -35,38 +44,50 @@
                 <button id="whiteout-mode" class="btn">🧽 Erase</button>
             </div>
 
-          <div class="tool-group">
-        <button id="rotate-page" class="btn" style="background-color: #f39c12; color: white;">🔄 Rotate 90°</button>
-        <button id="delete-selected" class="btn btn-danger">🗑️ Delete Object</button>
-    </div>
+            <div class="tool-group">
+                <button id="add-rect" class="btn">⬜ Rect</button>
+                <button id="add-circle" class="btn">⭕ Circle</button>
+            </div>
 
-    <div class="tool-group pagination">
-        <button id="prev-page" class="btn">◀</button>
-        <span id="page-info"><span id="page-num">0</span> / <span id="page-count">0</span></span>
-        <button id="next-page" class="btn">▶</button>
-    </div>
+            <div class="tool-group">
+                <button id="rotate-page" class="btn" style="background-color: #f39c12; color: white;">🔄 Rotate 90°</button>
+                <button id="delete-selected" class="btn btn-danger">🗑️ Delete Object</button>
+            </div>
 
-    <div class="tool-group">
-        <button id="remove-page" class="btn btn-danger">📄 Delete Page</button>
-        <button id="export-pdf" class="btn btn-success">💾 Save & Download</button>
-    </div>
-    
-    <div class="tool-group">
-        <button id="ocr-btn" class="btn">🔍 OCR Edit</button>
+            <div class="tool-group pagination">
+                <button id="zoom-out" class="btn" style="width: 48%;">➖</button>
+                <button id="zoom-in" class="btn" style="width: 48%;">➕</button>
+            </div>
+
+            <div class="tool-group pagination">
+                <button id="prev-page" class="btn">◀</button>
+                <span id="page-info"><span id="page-num">0</span> / <span id="page-count">0</span></span>
+                <button id="next-page" class="btn">▶</button>
+            </div>
+
+            <div class="tool-group">
+                <button id="remove-page" class="btn btn-danger">📄 Delete Page</button>
+                <button id="export-pdf" class="btn btn-success">💾 Save & Download</button>
             </div>
         </aside>
 
         <main class="viewer">
             <div id="text-toolbar" class="text-toolbar" style="display: none;">
-                <select id="font-family"><option value="Arial">Arial</option></select>
+                <select id="font-family">
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                </select>
                 <input type="number" id="font-size" value="24" style="width: 50px;">
-                <input type="color" id="font-color">
-                <button id="font-bold">B</button>
+                <input type="color" id="font-color" value="#000000">
+                <button id="font-bold"><b>B</b></button>
+                <button id="font-italic"><i>I</i></button>
             </div>
 
-            <div id="brush-toolbar" class="text-toolbar" style="display: none; top: 70px;">
-                <input type="color" id="brush-color">
-                <input type="range" id="brush-size" min="1" max="100">
+            <div id="brush-toolbar" class="text-toolbar" style="display: none; top: 80px;">
+                <span style="color: #2c3e50; font-size: 12px; font-weight: bold;">Brush:</span>
+                <input type="color" id="brush-color" value="#ff0000">
+                <input type="range" id="brush-size" min="1" max="100" value="5" style="width: 80px;">
             </div>
 
             <div class="canvas-container-wrapper" id="canvas-wrapper">
@@ -78,13 +99,16 @@
 
     <div id="signature-modal" class="modal">
         <div class="modal-content">
-            <canvas id="signature-pad" width="400" height="200" style="border:1px solid #ccc"></canvas>
+            <h3>Draw Your Signature</h3>
+            <canvas id="signature-pad" width="400" height="200"></canvas>
             <div class="modal-actions">
+                <button id="clear-sig" class="btn btn-danger">Clear</button>
                 <button id="save-sig" class="btn btn-success">Insert</button>
                 <button id="cancel-sig" class="btn">Cancel</button>
             </div>
         </div>
     </div>
+
     <script type="module" src="main.js"></script>
 </body>
 </html>
