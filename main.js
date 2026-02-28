@@ -1,4 +1,5 @@
-import { initElements, elements } from './state.js';
+// main.js
+import { initElements, elements } from './state.js'; // Added initElements here
 import { handlePdfUpload, prevPage, nextPage, removeCurrentPage, zoomIn, zoomOut, rotatePage } from './pdfViewer.js';
 import { 
     enableCursorMode, addText, addRectangle, addCircle,
@@ -10,49 +11,46 @@ import {
 import { exportPdf, mergePdfs, extractCurrentPage } from './exporter.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize elements first
     initElements();
 
-    // Helper to safely attach events to elements that might be null
+    // 2. Defensive Helper: Prevents "Cannot set properties of null" errors
     const safeAttach = (id, fn, eventType = 'onclick') => {
         const el = document.getElementById(id);
         if (el) {
             el[eventType] = fn;
         } else {
-            console.warn(`Element with ID "${id}" not found. skipping event attachment.`);
+            console.warn(`Element with ID "${id}" not found. Skipping.`);
         }
     };
 
-    // --- Fabric.js Selection Events ---
+    // 3. Fabric.js Selection Events
     if (elements.fabricCanvas) {
         elements.fabricCanvas.on('selection:created', syncTextToolbar);
         elements.fabricCanvas.on('selection:updated', syncTextToolbar);
         elements.fabricCanvas.on('selection:cleared', syncTextToolbar);
     }
 
-    // --- Text Toolbar Listeners ---
+    // --- Toolbar Listeners ---
     safeAttach('font-family', (e) => updateTextProperty('fontFamily', e.target.value), 'onchange');
     safeAttach('font-size', (e) => updateTextProperty('fontSize', e.target.value), 'oninput');
     safeAttach('font-color', (e) => updateTextProperty('fill', e.target.value), 'oninput');
     safeAttach('font-bold', () => updateTextProperty('fontWeight'));
     safeAttach('font-italic', () => updateTextProperty('fontStyle'));
-
-    // --- Brush Toolbar Listeners ---
     safeAttach('brush-color', updateBrush, 'oninput');
     safeAttach('brush-size', updateBrush, 'oninput');
 
-    // --- File Operations ---
+    // --- Sidebar Tools ---
     safeAttach('upload-pdf', (e) => {
         const file = e.target.files[0];
         if (file) handlePdfUpload(file);
     }, 'onchange');
-
+    
     safeAttach('merge-pdfs', (e) => {
         if (e.target.files.length > 0) mergePdfs(e.target.files);
     }, 'onchange');
 
     safeAttach('extract-page', extractCurrentPage);
-
-    // --- Editor Tools ---
     safeAttach('cursor-mode', enableCursorMode);
     safeAttach('add-text', addText);
     safeAttach('add-rect', addRectangle);
@@ -72,20 +70,19 @@ document.addEventListener('DOMContentLoaded', () => {
     safeAttach('zoom-out', zoomOut);
     safeAttach('remove-page', removeCurrentPage);
 
-    // --- Signature Modal ---
+    // --- Signature ---
     safeAttach('add-signature', openSignatureModal);
     safeAttach('save-sig', saveSignature);
     safeAttach('cancel-sig', closeSignatureModal);
     safeAttach('clear-sig', clearSignature);
 
-    // --- Final Actions ---
+    // --- Export ---
     safeAttach('export-pdf', exportPdf);
 
     // --- Keyboard Shortcuts ---
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
             const active = document.activeElement;
-            // Don't delete if typing in an input or textarea
             if (active && active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA') {
                 deleteSelected();
             }
