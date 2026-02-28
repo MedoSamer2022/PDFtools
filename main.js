@@ -1,6 +1,6 @@
 // main.js
 import { handlePdfUpload, prevPage, nextPage } from './pdfViewer.js';
-import { enableCursorMode, addText, enableDrawMode, enableWhiteoutMode, deleteSelected } from './tools.js';
+import { enableCursorMode, addText, addImage, enableDrawMode, enableWhiteoutMode, deleteSelected } from './tools.js';
 import { exportPdf } from './exporter.js';
 
 document.getElementById('upload-pdf').addEventListener('change', (e) => {
@@ -8,6 +8,14 @@ document.getElementById('upload-pdf').addEventListener('change', (e) => {
     if (file && file.type === 'application/pdf') {
         handlePdfUpload(file);
     }
+});
+
+document.getElementById('upload-image').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        addImage(file);
+    }
+    e.target.value = ''; 
 });
 
 document.getElementById('prev-page').addEventListener('click', prevPage);
