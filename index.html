@@ -77,6 +77,12 @@
                     <option value="Arial">Arial</option>
                     <option value="Times New Roman">Times New Roman</option>
                     <option value="Courier New">Courier New</option>
+                    <div id="ocr-progress-container" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 300px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; text-align: center;">
+    <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #2c3e50;" id="ocr-status-text">Initializing OCR...</div>
+    <div style="width: 100%; background: #eee; height: 10px; border-radius: 5px; overflow: hidden;">
+        <div id="ocr-progress-bar" style="width: 0%; height: 100%; background: #3498db; transition: width 0.2s;"></div>
+    </div>
+</div>
                 </select>
                 <input type="number" id="font-size" value="24" style="width: 50px;">
                 <input type="color" id="font-color" value="#000000">
