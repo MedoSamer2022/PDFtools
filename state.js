@@ -1,4 +1,3 @@
-// state.js
 export const state = {
     pdfDoc: null,
     pageNum: 1,
@@ -12,7 +11,6 @@ export const state = {
     deletedPages: []
 };
 
-// Fixed: Added 'export' here
 export const elements = {};
 
 export function initElements() {
@@ -21,8 +19,6 @@ export function initElements() {
     if (elements.pdfCanvas) {
         elements.ctx = elements.pdfCanvas.getContext('2d');
     }
-    
-    // Initialize Fabric Canvas
     elements.fabricCanvas = new fabric.Canvas('fabric-canvas', {
         preserveObjectStacking: true,
         allowTouchScrolling: true
