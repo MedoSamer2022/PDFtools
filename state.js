@@ -1,3 +1,4 @@
+// state.js
 export const state = {
     pdfDoc: null,
     pageNum: 1,
