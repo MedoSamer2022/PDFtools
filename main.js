@@ -1,6 +1,6 @@
 // main.js
 import { initElements } from './state.js';
-import { handlePdfUpload, prevPage, nextPage } from './pdfViewer.js';
+import { handlePdfUpload, prevPage, nextPage, zoomIn, zoomOut } from './pdfViewer.js';
 import { enableCursorMode, addText, addImage, enableDrawMode, enableWhiteoutMode, deleteSelected, performOCR } from './tools.js';
 import { exportPdf } from './exporter.js';
 
@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('prev-page')?.addEventListener('click', prevPage);
     document.getElementById('next-page')?.addEventListener('click', nextPage);
+    
+    document.getElementById('zoom-in')?.addEventListener('click', zoomIn);
+    document.getElementById('zoom-out')?.addEventListener('click', zoomOut);
 
     document.getElementById('cursor-mode')?.addEventListener('click', enableCursorMode);
     document.getElementById('add-text')?.addEventListener('click', addText);
