@@ -1,97 +1,68 @@
 // tools.js
+import { elements } from './state.js';
 
-export async function performOCR() {
+export async function performAdvancedAI_OCR() {
     disableDrawingMode();
-    if (!elements.pdfCanvas) return;
-
     const progressCont = document.getElementById('ocr-progress-container');
-    const bar = document.getElementById('ocr-progress-bar');
     const statusText = document.getElementById('ocr-status-text');
     
     progressCont.style.display = 'block';
-    statusText.innerText = "Preparing Image...";
+    statusText.innerText = "Running Deep Learning Models...";
 
     try {
-        // 1. Setup High-Res Processing Canvas
-        const scale = 2.5; // Upscale for better small-text detection
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = elements.pdfCanvas.width * scale;
-        tempCanvas.height = elements.pdfCanvas.height * scale;
-        const tCtx = tempCanvas.getContext('2d');
-        
-        tCtx.scale(scale, scale);
-        tCtx.drawImage(elements.pdfCanvas, 0, 0);
-
-        // 2. Image Enhancement (Binarization)
-        // This converts the image to pure Black & White to remove "noise" from scans
-        const imageData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-        const pixels = imageData.data;
-        for (let i = 0; i < pixels.length; i += 4) {
-            const grayscale = pixels[i] * 0.3 + pixels[i + 1] * 0.59 + pixels[i + 2] * 0.11;
-            const threshold = grayscale < 150 ? 0 : 255; // Thresholding logic
-            pixels[i] = pixels[i + 1] = pixels[i + 2] = threshold;
-        }
-        tCtx.putImageData(imageData, 0, 0);
-
-        // 3. Initialize Worker with Arabic + English
-        const worker = await Tesseract.createWorker('eng+ara', 1, {
-            logger: m => {
-                if (m.status === 'recognizing text') {
-                    const p = Math.round(m.progress * 100);
-                    bar.style.width = `${p}%`;
-                    statusText.innerText = `Analyzing Layout: ${p}%`;
-                }
-            }
+        // 1. Initialize the Engine (Runs locally on your Mac M2 GPU)
+        const engine = await RapidOCR.create({
+            detModel: 'ch_PP-OCRv3_det_infer.onnx', // Detection Model
+            recModel: 'ch_PP-OCRv3_rec_infer.onnx', // Recognition Model
+            dict: 'arabic_dict.txt'                 // Supports your Arabic docs
         });
 
-        // Set parameters for "Auto Layout" detection
-        await worker.setParameters({
-            tessedit_pageseg_mode: '3', // Fully automatic page segmentation
-            preserve_interword_spaces: '1'
-        });
+        // 2. Process the Canvas
+        const result = await engine.ocr(elements.pdfCanvas);
 
-        const { data } = await worker.recognize(tempCanvas);
+        // 3. Adobe-Style Reconstruction
+        result.forEach(item => {
+            const [box, [text, confidence]] = item;
+            
+            // Calculate Box Coordinates
+            const x = box[0][0];
+            const y = box[0][1];
+            const w = box[1][0] - x;
+            const h = box[2][1] - y;
 
-        // 4. Smart Object Placement
-        // We group by 'lines' to maintain paragraph structure but allow 'word' editing
-        data.lines.forEach(line => {
-            if (line.confidence < 50) return;
+            if (confidence < 0.5) return;
 
-            const x = line.bbox.x0 / scale;
-            const y = line.bbox.y0 / scale;
-            const w = (line.bbox.x1 - line.bbox.x0) / scale;
-            const h = (line.bbox.y1 - line.bbox.y0) / scale;
+            // Step A: Whiteout the original "image" text
+            elements.fabricCanvas.add(new fabric.Rect({
+                left: x, top: y, width: w, height: h,
+                fill: 'white', selectable: false
+            }));
 
-            // Mask the original area
-            const mask = new fabric.Rect({
+            // Step B: Add the smart editable layer
+            const editableText = new fabric.IText(text, {
                 left: x,
                 top: y,
-                width: w,
-                height: h,
-                fill: 'white',
-                selectable: false
-            });
-            elements.fabricCanvas.add(mask);
-
-            // Add the IText (Editable)
-            const text = new fabric.IText(line.text.trim(), {
-                left: x,
-                top: y,
-                fontSize: h * 0.9,
+                fontSize: h * 0.8,
                 fontFamily: 'Arial',
-                fill: '#000000',
-                transparentCorners: false,
-                cornerColor: '#3498db'
+                fill: '#000',
+                // Keep the exact orientation
+                angle: calculateAngle(box) 
             });
-            elements.fabricCanvas.add(text);
+            
+            elements.fabricCanvas.add(editableText);
         });
 
-        await worker.terminate();
     } catch (e) {
-        console.error("OCR Error:", e);
-        alert("OCR failed to process image content.");
+        console.error("AI OCR Failed:", e);
     } finally {
         progressCont.style.display = 'none';
         elements.fabricCanvas.renderAll();
     }
+}
+
+// Helper to handle crooked/rotated scans
+function calculateAngle(box) {
+    const dy = box[1][1] - box[0][1];
+    const dx = box[1][0] - box[0][0];
+    return Math.atan2(dy, dx) * (180 / Math.PI);
 }
