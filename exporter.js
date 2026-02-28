@@ -3,16 +3,14 @@ import { state, elements } from './state.js';
 import { saveCurrentPageState } from './pdfViewer.js';
 
 /**
- * 💾 Export the current PDF with all Fabric.js overlays
+ * 💾 Export the full PDF with all Fabric.js overlays
  */
 export async function exportPdf() {
     if (!state.originalPdfBytes) return;
     saveCurrentPageState();
 
     const exportBtn = document.getElementById('export-pdf');
-    const originalText = exportBtn.innerText;
-    exportBtn.innerText = "⏳ Saving...";
-    exportBtn.disabled = true;
+    if (exportBtn) exportBtn.innerText = "⏳ Saving...";
 
     try {
         const { PDFDocument, degrees } = window.PDFLib;
@@ -23,18 +21,15 @@ export async function exportPdf() {
             const pageNumIter = i + 1;
             const page = pages[i];
 
-            // Apply global rotation
             if (state.rotation !== 0) {
                 page.setRotation(degrees(state.rotation));
             }
 
-            // If there are Fabric.js objects, flatten them onto the PDF
             if (state.fabricPages[pageNumIter] && state.fabricPages[pageNumIter].objects.length > 0) {
                 const { width, height } = page.getSize();
                 const tempCanvas = document.createElement('canvas');
                 const tempFabric = new fabric.StaticCanvas(tempCanvas);
                 
-                // Set size to match PDF (at high resolution)
                 tempFabric.setWidth(width * 2); 
                 tempFabric.setHeight(height * 2);
 
@@ -45,24 +40,19 @@ export async function exportPdf() {
             }
         }
 
-        // Remove deleted pages (in reverse order to keep indices correct)
-        [...state.deletedPages].sort((a, b) => b - a).forEach(num => {
-            pdfDocExport.removePage(num - 1);
-        });
+        [...state.deletedPages].sort((a, b) => b - a).forEach(num => pdfDocExport.removePage(num - 1));
 
         const pdfBytes = await pdfDocExport.save();
-        downloadBlob(pdfBytes, 'edited_document.pdf', 'application/pdf');
+        downloadBlob(pdfBytes, 'edited_pro.pdf', 'application/pdf');
     } catch (e) {
-        console.error("Export Error:", e);
-        alert("Failed to export PDF.");
+        console.error(e);
     } finally {
-        exportBtn.innerText = originalText;
-        exportBtn.disabled = false;
+        if (exportBtn) exportBtn.innerText = "💾 Save & Download";
     }
 }
 
 /**
- * 🔗 Merge multiple PDF files into one
+ * 🔗 Merge multiple PDFs
  */
 export async function mergePdfs(files) {
     const { PDFDocument } = window.PDFLib;
@@ -76,43 +66,40 @@ export async function mergePdfs(files) {
     }
 
     const mergedBytes = await mergedPdf.save();
-    downloadBlob(mergedBytes, 'merged_document.pdf', 'application/pdf');
+    downloadBlob(mergedBytes, 'merged.pdf', 'application/pdf');
 }
 
 /**
- * ✂️ Extract ONLY the current viewing page as a new PDF
- * Fixed: This is the function causing your error
+ * ✂️ Extract only the current page (The missing function)
  */
 export async function extractCurrentPage() {
-    if (!state.pdfDoc || !state.originalPdfBytes) return;
+    if (!state.originalPdfBytes) return;
     
     try {
         const { PDFDocument } = window.PDFLib;
         const pdfDoc = await PDFDocument.load(state.originalPdfBytes);
         const singlePagePdf = await PDFDocument.create();
         
-        // Copy only the current page (state.pageNum is 1-indexed)
+        // Copy only the current page (index starts at 0)
         const [copiedPage] = await singlePagePdf.copyPages(pdfDoc, [state.pageNum - 1]);
         singlePagePdf.addPage(copiedPage);
 
         const pdfBytes = await singlePagePdf.save();
         downloadBlob(pdfBytes, `extracted_page_${state.pageNum}.pdf`, 'application/pdf');
     } catch (e) {
-        console.error("Extraction Error:", e);
+        console.error("Extraction failed:", e);
     }
 }
 
 /**
- * Helper: Download binary data as a file
+ * Helper: Download helper
  */
 function downloadBlob(data, fileName, mimeType) {
     const blob = new Blob([data], { type: mimeType });
     const url = window.URL.createObjectURL(blob);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = url;
-    downloadLink.download = fileName;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
     window.URL.revokeObjectURL(url);
 }
