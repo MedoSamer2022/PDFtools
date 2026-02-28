@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro PDF Editor</title>
+    <title>Pro PDF Editor & Tools</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
@@ -20,6 +20,15 @@
                     <input type="file" id="upload-pdf" accept="application/pdf" style="display: none;">
                 </label>
             </div>
+            
+            <div class="tool-group">
+                <label class="btn file-label" style="background-color: #8e44ad; color: white; text-align: center; display: block; padding: 10px; cursor: pointer;">
+                    🔗 Merge PDFs
+                    <input type="file" id="merge-pdfs" accept="application/pdf" multiple style="display: none;">
+                </label>
+                <button id="extract-page" class="btn" style="background-color: #9b59b6; color: white;">✂️ Extract Current Page</button>
+            </div>
+
             <div class="tool-group">
                 <button id="cursor-mode" class="btn">👆 Select / Move</button>
                 <button id="add-text" class="btn">📝 Add Text</button>
@@ -27,6 +36,7 @@
                     🖼️ Add Image
                     <input type="file" id="upload-image" accept="image/png, image/jpeg" style="display: none;">
                 </label>
+                <button id="add-signature" class="btn">✍️ Add Signature</button>
                 <button id="ocr-btn" class="btn">🔍 Extract & Edit Text (OCR)</button>
                 <button id="toggle-draw" class="btn">✏️ Draw</button>
                 <button id="whiteout-mode" class="btn">🧽 Erase (Whiteout)</button>
@@ -42,6 +52,9 @@
                 <button id="next-page" class="btn">Next ▶</button>
             </div>
             <div class="tool-group">
+                <button id="remove-page" class="btn btn-danger">📄 Delete Current Page</button>
+            </div>
+            <div class="tool-group">
                 <button id="export-pdf" class="btn btn-success">💾 Save & Download</button>
             </div>
         </aside>
@@ -52,6 +65,19 @@
             </div>
         </main>
     </div>
+
+    <div id="signature-modal" class="modal">
+        <div class="modal-content">
+            <h3>Draw Your Signature</h3>
+            <canvas id="signature-pad" width="400" height="200"></canvas>
+            <div class="modal-actions">
+                <button id="clear-sig" class="btn btn-danger">Clear</button>
+                <button id="save-sig" class="btn btn-success">Insert</button>
+                <button id="cancel-sig" class="btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="main.js"></script>
 </body>
 </html>
