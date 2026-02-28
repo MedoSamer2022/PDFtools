@@ -53,7 +53,8 @@ export function renderPage(num) {
     state.pageRendering = true;
     
     state.pdfDoc.getPage(num).then(page => {
-        const viewport = page.getViewport({ scale: 1.5 * state.zoomLevel });
+        const baseScale = 1.5;
+        const viewport = page.getViewport({ scale: baseScale * state.zoomLevel });
         
         elements.pdfCanvas.height = viewport.height;
         elements.pdfCanvas.width = viewport.width;
@@ -62,9 +63,8 @@ export function renderPage(num) {
         
         elements.canvasWrapper.style.width = `${viewport.width}px`;
         elements.canvasWrapper.style.height = `${viewport.height}px`;
-        
-        elements.canvasWrapper.style.transform = 'none';
-        elements.canvasWrapper.style.zoom = 'normal';
+
+        elements.fabricCanvas.setZoom(state.zoomLevel);
 
         const renderContext = { canvasContext: elements.ctx, viewport: viewport };
         
@@ -92,8 +92,6 @@ export function renderPage(num) {
         if (state.fabricPages[num]) {
             elements.fabricCanvas.loadFromJSON(state.fabricPages[num], elements.fabricCanvas.renderAll.bind(elements.fabricCanvas));
         }
-        
-        elements.fabricCanvas.setZoom(1); 
     });
 }
 
