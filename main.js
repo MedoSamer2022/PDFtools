@@ -1,10 +1,10 @@
 // main.js
 import { elements, initElements } from './state.js';
-import { handlePdfUpload, prevPage, nextPage, removeCurrentPage, zoomIn, zoomOut } from './pdfViewer.js';
+import { handlePdfUpload, prevPage, nextPage, removeCurrentPage, zoomIn, zoomOut, rotatePage } from './pdfViewer.js';
 import { 
-    enableCursorMode, addText, addImage, addRectangle, addCircle,
+    enableCursorMode, addText, addRectangle, addCircle,
     enableDrawMode, enableWhiteoutMode, enableHighlightMode, enableRedactionMode,
-    deleteSelected, performOCR, 
+    deleteSelected, performOCR, updateBrush,
     openSignatureModal, closeSignatureModal, clearSignature, saveSignature,
     syncTextToolbar, updateTextProperty
 } from './tools.js';
@@ -13,86 +13,51 @@ import { exportPdf, mergePdfs, extractCurrentPage } from './exporter.js';
 document.addEventListener('DOMContentLoaded', () => {
     initElements();
 
-    // Attach Text Selection Events for Toolbar
-    if (elements.fabricCanvas) {
-        elements.fabricCanvas.on('selection:created', syncTextToolbar);
-        elements.fabricCanvas.on('selection:updated', syncTextToolbar);
-        elements.fabricCanvas.on('selection:cleared', syncTextToolbar);
-    }
+    // Event Listeners for Fabric Selection
+    elements.fabricCanvas.on('selection:created', syncTextToolbar);
+    elements.fabricCanvas.on('selection:updated', syncTextToolbar);
+    elements.fabricCanvas.on('selection:cleared', syncTextToolbar);
 
-    // Text Toolbar Controls
-    document.getElementById('font-family')?.addEventListener('change', (e) => updateTextProperty('fontFamily', e.target.value));
-    document.getElementById('font-size')?.addEventListener('input', (e) => updateTextProperty('fontSize', e.target.value));
-    document.getElementById('font-color')?.addEventListener('input', (e) => updateTextProperty('fill', e.target.value));
-    document.getElementById('font-bold')?.addEventListener('click', () => updateTextProperty('fontWeight', null));
-    document.getElementById('font-italic')?.addEventListener('click', () => updateTextProperty('fontStyle', null));
+    // Text Toolbar
+    document.getElementById('font-family').onchange = (e) => updateTextProperty('fontFamily', e.target.value);
+    document.getElementById('font-size').oninput = (e) => updateTextProperty('fontSize', e.target.value);
+    document.getElementById('font-color').oninput = (e) => updateTextProperty('fill', e.target.value);
+    document.getElementById('font-bold').onclick = () => updateTextProperty('fontWeight');
+    document.getElementById('font-italic').onclick = () => updateTextProperty('fontStyle');
 
-    const uploadPdf = document.getElementById('upload-pdf');
-    if (uploadPdf) {
-        uploadPdf.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file && file.type === 'application/pdf') {
-                handlePdfUpload(file);
-            }
-            e.target.value = ''; 
-        });
-    }
+    // Brush Toolbar
+    document.getElementById('brush-color').oninput = updateBrush;
+    document.getElementById('brush-size').oninput = updateBrush;
 
-    const uploadImage = document.getElementById('upload-image');
-    if (uploadImage) {
-        uploadImage.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                addImage(file);
-            }
-            e.target.value = ''; 
-        });
-    }
+    // Sidebar Buttons
+    document.getElementById('upload-pdf').onchange = (e) => handlePdfUpload(e.target.files[0]);
+    document.getElementById('cursor-mode').onclick = enableCursorMode;
+    document.getElementById('add-text').onclick = addText;
+    document.getElementById('highlight-mode').onclick = enableHighlightMode;
+    document.getElementById('redact-mode').onclick = enableRedactionMode;
+    document.getElementById('toggle-draw').onclick = enableDrawMode;
+    document.getElementById('whiteout-mode').onclick = enableWhiteoutMode;
+    document.getElementById('add-rect').onclick = addRectangle;
+    document.getElementById('add-circle').onclick = addCircle;
+    document.getElementById('rotate-page').onclick = rotatePage;
+    document.getElementById('delete-selected').onclick = deleteSelected;
+    document.getElementById('ocr-btn').onclick = performOCR;
 
-    const mergePdfsInput = document.getElementById('merge-pdfs');
-    if (mergePdfsInput) {
-        mergePdfsInput.addEventListener('change', (e) => {
-            const files = e.target.files;
-            if (files && files.length > 0) {
-                mergePdfs(files);
-            }
-            e.target.value = '';
-        });
-    }
+    // Page Navigation
+    document.getElementById('prev-page').onclick = prevPage;
+    document.getElementById('next-page').onclick = nextPage;
+    document.getElementById('zoom-in').onclick = zoomIn;
+    document.getElementById('zoom-out').onclick = zoomOut;
+    document.getElementById('remove-page').onclick = removeCurrentPage;
 
-    document.getElementById('extract-page')?.addEventListener('click', extractCurrentPage);
-    document.getElementById('prev-page')?.addEventListener('click', prevPage);
-    document.getElementById('next-page')?.addEventListener('click', nextPage);
-    document.getElementById('remove-page')?.addEventListener('click', removeCurrentPage);
-    document.getElementById('zoom-in')?.addEventListener('click', zoomIn);
-    document.getElementById('zoom-out')?.addEventListener('click', zoomOut);
+    // Signature Modal
+    document.getElementById('add-signature').onclick = openSignatureModal;
+    document.getElementById('cancel-sig').onclick = closeSignatureModal;
+    document.getElementById('clear-sig').onclick = clearSignature;
+    document.getElementById('save-sig').onclick = saveSignature;
 
-    document.getElementById('cursor-mode')?.addEventListener('click', enableCursorMode);
-    document.getElementById('add-text')?.addEventListener('click', addText);
-    document.getElementById('add-rect')?.addEventListener('click', addRectangle);
-    document.getElementById('add-circle')?.addEventListener('click', addCircle);
-    
-    document.getElementById('toggle-draw')?.addEventListener('click', enableDrawMode);
-    document.getElementById('whiteout-mode')?.addEventListener('click', enableWhiteoutMode);
-    document.getElementById('highlight-mode')?.addEventListener('click', enableHighlightMode);
-    document.getElementById('redact-mode')?.addEventListener('click', enableRedactionMode);
-    
-    document.getElementById('delete-selected')?.addEventListener('click', deleteSelected);
-    document.getElementById('ocr-btn')?.addEventListener('click', performOCR);
-
-    document.getElementById('add-signature')?.addEventListener('click', openSignatureModal);
-    document.getElementById('cancel-sig')?.addEventListener('click', closeSignatureModal);
-    document.getElementById('clear-sig')?.addEventListener('click', clearSignature);
-    document.getElementById('save-sig')?.addEventListener('click', saveSignature);
-
-    document.getElementById('export-pdf')?.addEventListener('click', exportPdf);
-    
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            const activeElement = document.activeElement;
-            if (activeElement && activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA') {
-                deleteSelected();
-            }
-        }
-    });
+    // Export & Tools
+    document.getElementById('export-pdf').onclick = exportPdf;
+    document.getElementById('extract-page').onclick = extractCurrentPage;
+    document.getElementById('merge-pdfs').onchange = (e) => mergePdfs(e.target.files);
 });
