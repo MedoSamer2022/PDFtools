@@ -34,3 +34,7 @@ document.getElementById('whiteout-mode')?.addEventListener('click', enableWhiteo
 document.getElementById('delete-selected')?.addEventListener('click', deleteSelected);
 
 document.getElementById('export-pdf')?.addEventListener('click', exportPdf);
+// main.js
+import { performOCR } from './tools.js';
+
+document.getElementById('ocr-btn')?.addEventListener('click', performOCR);
