@@ -59,7 +59,20 @@ export async function performAdvancedAI_OCR() {
         elements.fabricCanvas.renderAll();
     }
 }
-
+export function addText() {
+    disableDrawingMode();
+    const text = new fabric.IText('Double click to edit', {
+        left: 100,
+        top: 100,
+        fontFamily: 'Arial',
+        fill: '#000000',
+        fontSize: 24,
+        cornerColor: '#3498db',
+        transparentCorners: false
+    });
+    elements.fabricCanvas.add(text);
+    elements.fabricCanvas.setActiveObject(text);
+}
 // Helper to handle crooked/rotated scans
 function calculateAngle(box) {
     const dy = box[1][1] - box[0][1];
