@@ -27,7 +27,7 @@
                     🔗 Merge PDFs
                     <input type="file" id="merge-pdfs" accept="application/pdf" multiple style="display: none;">
                 </label>
-                <button id="extract-page" class="btn" style="background-color: #9b59b6; color: white;">✂️ Extract Current Page</button>
+                <button id="extract-page" class="btn" style="background-color: #9b59b6; color: white;">✂️ Extract Page</button>
             </div>
 
             <div class="tool-group">
@@ -73,28 +73,23 @@
 
         <main class="viewer">
             <div id="ocr-progress-container" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 300px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 1000; text-align: center;">
-                <div id="ocr-status-text" style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Initializing OCR...</div>
+                <div id="ocr-status-text" style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #2c3e50;">Initializing...</div>
                 <div style="width: 100%; background: #eee; height: 10px; border-radius: 5px; overflow: hidden;">
                     <div id="ocr-progress-bar" style="width: 0%; height: 100%; background: #3498db; transition: width 0.2s;"></div>
                 </div>
             </div>
 
             <div id="text-toolbar" class="text-toolbar" style="display: none;">
-                <select id="font-family">
-                    <option value="Arial">Arial</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Courier New">Courier New</option>
-                </select>
+                <select id="font-family"><option value="Arial">Arial</option><option value="Times New Roman">Times</option></select>
                 <input type="number" id="font-size" value="24" style="width: 50px;">
                 <input type="color" id="font-color" value="#000000">
-                <button id="font-bold"><b>B</b></button>
-                <button id="font-italic"><i>I</i></button>
+                <button id="font-bold">B</button>
+                <button id="font-italic">I</button>
             </div>
 
             <div id="brush-toolbar" class="text-toolbar" style="display: none; top: 80px;">
-                <span style="color: #2c3e50; font-size: 12px; font-weight: bold;">Brush:</span>
                 <input type="color" id="brush-color" value="#ff0000">
-                <input type="range" id="brush-size" min="1" max="100" value="5" style="width: 80px;">
+                <input type="range" id="brush-size" min="1" max="100" value="5">
             </div>
 
             <div class="canvas-container-wrapper" id="canvas-wrapper">
@@ -106,7 +101,7 @@
 
     <div id="signature-modal" class="modal">
         <div class="modal-content">
-            <h3>Draw Your Signature</h3>
+            <h3>Draw Signature</h3>
             <canvas id="signature-pad" width="400" height="200"></canvas>
             <div class="modal-actions">
                 <button id="clear-sig" class="btn btn-danger">Clear</button>
