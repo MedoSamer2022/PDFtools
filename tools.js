@@ -66,3 +66,25 @@ function calculateAngle(box) {
     const dx = box[1][0] - box[0][0];
     return Math.atan2(dy, dx) * (180 / Math.PI);
 }
+export function addRectangle() { 
+    disableDrawingMode();
+    const rect = new fabric.Rect({ 
+        left: 150, top: 150, width: 100, height: 60, 
+        fill: 'transparent', stroke: 'red', strokeWidth: 2,
+        cornerColor: '#3498db', transparentCorners: false
+    });
+    elements.fabricCanvas.add(rect);
+    elements.fabricCanvas.setActiveObject(rect);
+}
+
+// FIX: Ensure 'export' is here!
+export function addCircle() { 
+    disableDrawingMode();
+    const circle = new fabric.Circle({ 
+        left: 150, top: 150, radius: 40, 
+        fill: 'transparent', stroke: 'blue', strokeWidth: 2,
+        cornerColor: '#3498db', transparentCorners: false
+    });
+    elements.fabricCanvas.add(circle);
+    elements.fabricCanvas.setActiveObject(circle);
+}
