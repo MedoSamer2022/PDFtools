@@ -1,3 +1,4 @@
+// main.js
 import { initElements, elements } from './state.js';
 import { handlePdfUpload, prevPage, nextPage, removeCurrentPage, zoomIn, zoomOut, rotatePage } from './pdfViewer.js';
 import { 
@@ -31,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     safeAttach('extract-page', extractCurrentPage);
     safeAttach('cursor-mode', enableCursorMode);
     safeAttach('add-text', addText);
+    safeAttach('add-rect', addRectangle);
+    safeAttach('add-circle', addCircle);
     safeAttach('highlight-mode', enableHighlightMode);
     safeAttach('redact-mode', enableRedactionMode);
     safeAttach('toggle-draw', enableDrawMode);
