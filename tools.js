@@ -22,6 +22,26 @@ export function addText() {
     elements.fabricCanvas.setActiveObject(text);
 }
 
+export function addImage(file) {
+    disableDrawingMode();
+    const reader = new FileReader();
+    reader.onload = function(f) {
+        const data = f.target.result;
+        fabric.Image.fromURL(data, function(img) {
+            img.set({
+                left: 100,
+                top: 100,
+                cornerColor: 'blue',
+                transparentCorners: false
+            });
+            img.scaleToWidth(200);
+            elements.fabricCanvas.add(img);
+            elements.fabricCanvas.setActiveObject(img);
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
 export function enableDrawMode(btnEvent) {
     disableDrawingMode();
     elements.fabricCanvas.isDrawingMode = true;
