@@ -5,7 +5,6 @@ export function disableDrawingMode() {
     if (!elements.fabricCanvas) return;
     elements.fabricCanvas.isDrawingMode = false;
     
-    // Reset all tool button styles
     const buttons = ['toggle-draw', 'whiteout-mode', 'highlight-mode', 'redact-mode'];
     buttons.forEach(id => {
         const btn = document.getElementById(id);
@@ -35,6 +34,43 @@ export function addText() {
     });
     elements.fabricCanvas.add(text);
     elements.fabricCanvas.setActiveObject(text);
+}
+
+export function syncTextToolbar() {
+    if (!elements.fabricCanvas) return;
+    const obj = elements.fabricCanvas.getActiveObject();
+    const toolbar = document.getElementById('text-toolbar');
+    
+    if (obj && obj.type === 'i-text') {
+        toolbar.style.display = 'flex';
+        document.getElementById('font-family').value = obj.fontFamily || 'Arial';
+        document.getElementById('font-size').value = obj.fontSize || 24;
+        document.getElementById('font-color').value = obj.fill || '#000000';
+        
+        document.getElementById('font-bold').style.backgroundColor = obj.fontWeight === 'bold' ? '#bdc3c7' : '#ecf0f1';
+        document.getElementById('font-italic').style.backgroundColor = obj.fontStyle === 'italic' ? '#bdc3c7' : '#ecf0f1';
+    } else {
+        toolbar.style.display = 'none';
+    }
+}
+
+export function updateTextProperty(property, value) {
+    const obj = elements.fabricCanvas.getActiveObject();
+    if (obj && obj.type === 'i-text') {
+        if (property === 'fontWeight') {
+            const isBold = obj.fontWeight === 'bold';
+            obj.set('fontWeight', isBold ? 'normal' : 'bold');
+            document.getElementById('font-bold').style.backgroundColor = isBold ? '#ecf0f1' : '#bdc3c7';
+        } else if (property === 'fontStyle') {
+            const isItalic = obj.fontStyle === 'italic';
+            obj.set('fontStyle', isItalic ? 'normal' : 'italic');
+            document.getElementById('font-italic').style.backgroundColor = isItalic ? '#ecf0f1' : '#bdc3c7';
+        } else {
+            if (property === 'fontSize') value = parseInt(value, 10);
+            obj.set(property, value);
+        }
+        elements.fabricCanvas.renderAll();
+    }
 }
 
 export function addImage(file) {
@@ -115,7 +151,7 @@ export function enableWhiteoutMode(btnEvent) {
 export function enableHighlightMode(btnEvent) {
     disableDrawingMode();
     elements.fabricCanvas.isDrawingMode = true;
-    elements.fabricCanvas.freeDrawingBrush.color = "rgba(255, 235, 59, 0.4)"; // Yellow with opacity
+    elements.fabricCanvas.freeDrawingBrush.color = "rgba(255, 235, 59, 0.4)"; 
     elements.fabricCanvas.freeDrawingBrush.width = 20; 
     if (btnEvent && btnEvent.target) {
         btnEvent.target.style.backgroundColor = '#f1c40f';
@@ -126,7 +162,7 @@ export function enableHighlightMode(btnEvent) {
 export function enableRedactionMode(btnEvent) {
     disableDrawingMode();
     elements.fabricCanvas.isDrawingMode = true;
-    elements.fabricCanvas.freeDrawingBrush.color = "#000000"; // Solid Black
+    elements.fabricCanvas.freeDrawingBrush.color = "#000000"; 
     elements.fabricCanvas.freeDrawingBrush.width = 25; 
     if (btnEvent && btnEvent.target) {
         btnEvent.target.style.backgroundColor = '#2c3e50';
@@ -154,8 +190,7 @@ export async function performOCR() {
     ocrBtn.disabled = true;
 
     try {
-        // Image Pre-processing for better OCR accuracy
-        const scale = 2; // Upscale image
+        const scale = 2; 
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = elements.pdfCanvas.width * scale;
         tempCanvas.height = elements.pdfCanvas.height * scale;
@@ -164,12 +199,11 @@ export async function performOCR() {
         tCtx.scale(scale, scale);
         tCtx.drawImage(elements.pdfCanvas, 0, 0);
 
-        // Binarization (High Contrast Grayscale)
         const imageData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
         const data = imageData.data;
         for (let i = 0; i < data.length; i += 4) {
             const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-            const threshold = avg < 160 ? 0 : 255; // Force black or white
+            const threshold = avg < 160 ? 0 : 255; 
             data[i] = data[i + 1] = data[i + 2] = threshold;
         }
         tCtx.putImageData(imageData, 0, 0);
@@ -180,10 +214,8 @@ export async function performOCR() {
             preserve_interword_spaces: '1'
         });
 
-        // Use the pre-processed canvas
         const { data: resultData } = await worker.recognize(tempCanvas);
 
-        // Read WORD by WORD instead of lines for high precision
         resultData.words.forEach(word => {
             if (word.text.trim().length === 0 || word.confidence < 60) return;
 
@@ -194,7 +226,6 @@ export async function performOCR() {
             const width = x1 - x0;
             const height = y1 - y0;
 
-            // Add White Box to hide original text perfectly
             const rect = new fabric.Rect({
                 left: x0,
                 top: y0 - (height * 0.1),
@@ -205,7 +236,6 @@ export async function performOCR() {
             });
             elements.fabricCanvas.add(rect);
 
-            // Overlay editable text
             const text = new fabric.IText(word.text, {
                 left: x0,
                 top: y0,
@@ -223,7 +253,6 @@ export async function performOCR() {
         await worker.terminate();
     } catch (error) {
         console.error("OCR Error:", error);
-        alert("OCR Failed. Please check console.");
     } finally {
         ocrBtn.innerText = originalText;
         ocrBtn.disabled = false;
@@ -231,7 +260,6 @@ export async function performOCR() {
     }
 }
 
-// Signature Logic
 let sigPad, sigCtx, isDrawingSig = false;
 
 export function initSignaturePad() {
@@ -255,4 +283,40 @@ export function initSignaturePad() {
     });
 
     sigPad.addEventListener('mouseup', () => { isDrawingSig = false; });
-    sigPad.addEventListener('mouseout', () => {
+    sigPad.addEventListener('mouseout', () => { isDrawingSig = false; });
+}
+
+export function openSignatureModal() {
+    disableDrawingMode();
+    const modal = document.getElementById('signature-modal');
+    if (modal) modal.style.display = 'flex';
+    if (!sigPad) initSignaturePad();
+    clearSignature();
+}
+
+export function closeSignatureModal() {
+    const modal = document.getElementById('signature-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+export function clearSignature() {
+    if (sigCtx && sigPad) {
+        sigCtx.clearRect(0, 0, sigPad.width, sigPad.height);
+    }
+}
+
+export function saveSignature() {
+    if (!sigPad) return;
+    const dataURL = sigPad.toDataURL('image/png');
+    fabric.Image.fromURL(dataURL, function(img) {
+        img.set({
+            left: 100,
+            top: 100,
+            cornerColor: '#3498db',
+            transparentCorners: false
+        });
+        elements.fabricCanvas.add(img);
+        elements.fabricCanvas.setActiveObject(img);
+        closeSignatureModal();
+    });
+}
