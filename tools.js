@@ -40,6 +40,7 @@ export function syncTextToolbar() {
     if (!elements.fabricCanvas) return;
     const obj = elements.fabricCanvas.getActiveObject();
     const toolbar = document.getElementById('text-toolbar');
+    if (!toolbar) return;
     
     if (obj && obj.type === 'i-text') {
         toolbar.style.display = 'flex';
