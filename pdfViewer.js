@@ -19,6 +19,7 @@ function updatePageCountDisplay() {
 }
 
 export async function handlePdfUpload(file) {
+    if (!file) return;
     const fileReader = new FileReader();
     fileReader.onload = async function() {
         try {
@@ -29,7 +30,8 @@ export async function handlePdfUpload(file) {
             state.pageNum = 1;
             state.fabricPages = {}; 
             state.deletedPages = [];
-            state.zoomLevel = 1; 
+            state.zoomLevel = 1;
+            state.rotation = 0; 
             renderPage(state.pageNum);
         } catch (error) {
             console.error("Error loading PDF:", error);
@@ -54,7 +56,8 @@ export function renderPage(num) {
     
     state.pdfDoc.getPage(num).then(page => {
         const baseScale = 1.5;
-        const viewport = page.getViewport({ scale: baseScale * state.zoomLevel });
+        // Apply rotation to viewport
+        const viewport = page.getViewport({ scale: baseScale * state.zoomLevel, rotation: state.rotation });
         
         elements.pdfCanvas.height = viewport.height;
         elements.pdfCanvas.width = viewport.width;
@@ -93,6 +96,14 @@ export function renderPage(num) {
             elements.fabricCanvas.loadFromJSON(state.fabricPages[num], elements.fabricCanvas.renderAll.bind(elements.fabricCanvas));
         }
     });
+}
+
+// Fixed: Properly exporting rotatePage
+export function rotatePage() {
+    if (!state.pdfDoc) return;
+    saveCurrentPageState();
+    state.rotation = (state.rotation + 90) % 360;
+    renderPage(state.pageNum);
 }
 
 export function queueRenderPage(num) {
