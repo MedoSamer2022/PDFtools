@@ -1,5 +1,5 @@
 // tools.js
-import { elements } from './state.js';
+import { elements } from './state.js'; // ONLY ONE IMPORT AT THE TOP
 
 /**
  * 🔒 Utility: Disable drawing modes and hide toolbars
@@ -40,7 +40,7 @@ export function syncTextToolbar() {
     const obj = elements.fabricCanvas.getActiveObject();
     const tb = document.getElementById('text-toolbar');
     if (obj && obj.type === 'i-text') {
-        tb.style.display = 'flex';
+        if (tb) tb.style.display = 'flex';
         document.getElementById('font-family').value = obj.fontFamily || 'Arial';
         document.getElementById('font-size').value = obj.fontSize || 24;
         document.getElementById('font-color').value = obj.fill || '#000000';
@@ -156,7 +156,6 @@ export async function performOCR() {
         const { data } = await worker.recognize(elements.pdfCanvas);
         data.words.forEach(w => {
             if (w.confidence < 60) return;
-            // Add whiteout box and text
             elements.fabricCanvas.add(new fabric.Rect({
                 left: w.bbox.x0, top: w.bbox.y0, width: w.bbox.x1 - w.bbox.x0, height: w.bbox.y1 - w.bbox.y0,
                 fill: 'white', selectable: false
@@ -192,14 +191,14 @@ export function initSignaturePad() {
 export function openSignatureModal() {
     document.getElementById('signature-modal').style.display = 'flex';
     if (!sigPad) initSignaturePad();
-    clearSignature(); // This is the function the error was about!
+    clearSignature(); 
 }
 
 export function closeSignatureModal() {
-    document.getElementById('signature-modal').style.display = 'none';
+    const modal = document.getElementById('signature-modal');
+    if (modal) modal.style.display = 'none';
 }
 
-// FIX: Added 'export' to ensure main.js can see it
 export function clearSignature() {
     if (sigCtx) sigCtx.clearRect(0, 0, sigPad.width, sigPad.height);
 }
