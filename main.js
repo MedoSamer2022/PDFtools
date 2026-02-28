@@ -1,6 +1,7 @@
 // main.js
 import { initElements, elements } from './state.js';
 import { handlePdfUpload, prevPage, nextPage, removeCurrentPage, zoomIn, zoomOut, rotatePage } from './pdfViewer.js';
+
 import { 
     enableCursorMode, addText, addRectangle, addCircle, enableDrawMode, enableWhiteoutMode, enableHighlightMode, enableRedactionMode,
     deleteSelected, performOCR, updateBrush, openSignatureModal, closeSignatureModal, clearSignature, saveSignature, syncTextToolbar, updateTextProperty
